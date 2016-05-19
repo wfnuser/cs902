@@ -1,0 +1,36 @@
+1 # -*- coding: utf-8 -*-
+ 2 import re, collections
+ 3 
+ 4 def words(text):
+ 5     return re.findall('[a-z]+', text.lower())
+ 6 
+ 7 def train(features):
+ 8     model = collections.defaultdict(int)
+ 9     for f in features:
+10         model[f] += 1
+11     return model
+12 
+13 NWORDS = train(words(file('vocabulary.txt').read()))
+14 
+15 alphabet = 'abcdefghijklmnopqrstuvwxyz'
+16 
+17 def edits1(word):
+18     n = len(word)
+19     return set([word[0:i]+word[i+1:] for i in range(n)] + # xxxxxxxdeletion
+20                [word[0:i]+word[i+1]+word[i]+word[i+2:] for i in range(n-1)] + # transposition
+21                [word[0:i]+c+word[i+1:] for i in range(n) for c in alphabet] + # alteration
+22                [word[0:i]+c+word[i:] for i in range(n+1) for c in alphabet])# insertion
+23 
+24 def known_edits2(word):
+25     return set(e2 for e1 in edits1(word) for e2 in edits1(e1) if e2 in NWORDS)
+26 
+27 def known(words): return set(w for w in words if w in NWORDS)
+28 
+29 def correct(word):
+30     candidates = known([word]) or known(edits1(word)) or known_edits2(word) or [word]
+31     return max(candidates, key=lambda w: NWORDS[w])
+32 
+33 
+34 #usage:
+35 #correct('speling')
+36 
